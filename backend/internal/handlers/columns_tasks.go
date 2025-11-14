@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"mini-taskmgr-backend/internal/db"
 	"mini-taskmgr-backend/internal/models"
@@ -15,31 +16,72 @@ import (
 
 func CreateColumn(c *gin.Context) {
 	var input struct {
-		BoardID string `json:"boardId" binding:"required"`
-		Name    string `json:"name" binding:"required"`
+		BoardID   string `json:"boardId"`   // optional
+		ProjectID string `json:"projectId"` // optional
+		Name      string `json:"name" binding:"required"`
 	}
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	boardOID, err := primitive.ObjectIDFromHex(input.BoardID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid boardId"})
+
+	ctx := c.Request.Context()
+	boardsColl := db.Database.Collection("boards")
+	columnsColl := db.Database.Collection("columns")
+
+	var boardID primitive.ObjectID
+	var err error
+
+	if input.BoardID != "" {
+		boardID, err = primitive.ObjectIDFromHex(input.BoardID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid boardId"})
+			return
+		}
+	} else if input.ProjectID != "" {
+		pid, err := primitive.ObjectIDFromHex(input.ProjectID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid projectId"})
+			return
+		}
+
+		var board models.Board
+		err = boardsColl.FindOne(ctx, bson.M{"projectId": pid}).Decode(&board)
+		if err == mongo.ErrNoDocuments {
+			board = models.Board{
+				ID:        primitive.NewObjectID(),
+				ProjectID: pid,
+				Name:      "Main board",
+			}
+			if _, err = boardsColl.InsertOne(ctx, board); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create board"})
+				return
+			}
+		} else if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not query board"})
+			return
+		}
+
+		boardID = board.ID
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "boardId or projectId is required"})
 		return
 	}
-	col := models.Column{Name: input.Name, BoardID: boardOID, Position: 0}
 
-	collection := db.Database.Collection("columns")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// column struct ต้องตรงกับ models.Column
+	column := models.Column{
+		ID:      primitive.NewObjectID(),
+		BoardID: boardID,
+		Name:    input.Name,
+	}
 
-	res, err := collection.InsertOne(ctx, col)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "create failed"})
+	if _, err := columnsColl.InsertOne(ctx, column); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create column"})
 		return
 	}
-	id := res.InsertedID.(primitive.ObjectID).Hex()
-	c.JSON(http.StatusCreated, gin.H{"id": id, "name": col.Name})
+
+	c.JSON(http.StatusOK, column)
 }
 
 func CreateTask(c *gin.Context) {

@@ -1,8 +1,8 @@
-// File: E:\Final-Project\mini-taskmgr-next-go-full\mini-taskmgr-next-go\frontend\app\page.tsx
-import * as entry from '../../../app/page.js'
+// File: E:\Final-Project\mini-taskmgr-next-go\frontend\app\page.tsx
+import * as entry from '../../../app/Home.jsx'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
-type TEntry = typeof import('../../../app/page.js')
+type TEntry = typeof import('../../../app/Home.jsx')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{
