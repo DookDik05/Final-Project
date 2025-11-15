@@ -26,8 +26,11 @@ type Project struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Name        string             `bson:"name" json:"name"`
 	Description string             `bson:"description,omitempty" json:"description,omitempty"`
+	Color       string             `bson:"color,omitempty" json:"color,omitempty"`
 	OwnerID     primitive.ObjectID `bson:"ownerId" json:"ownerId"`
 	Members     []ProjectMember    `bson:"members" json:"members"`
+	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt   time.Time          `bson:"updatedAt" json:"updatedAt"`
 }
 
 type ProjectMember struct {

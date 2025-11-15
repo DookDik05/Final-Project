@@ -18,7 +18,10 @@ type ProjectResponse struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
+	Color       string `json:"color,omitempty"`
 	TaskCount   int64  `json:"taskCount"`
+	TasksCount  int64  `json:"tasksCount"`
+	CreatedAt   string `json:"createdAt,omitempty"`
 	UpdatedAt   string `json:"updatedAt,omitempty"`
 }
 
@@ -59,7 +62,9 @@ func ListProjects(c *gin.Context) {
 			ID          primitive.ObjectID `bson:"_id"`
 			Name        string             `bson:"name"`
 			Description string             `bson:"description,omitempty"`
+			Color       string             `bson:"color,omitempty"`
 			OwnerID     primitive.ObjectID `bson:"ownerId"`
+			CreatedAt   *time.Time         `bson:"createdAt,omitempty"`
 			UpdatedAt   *time.Time         `bson:"updatedAt,omitempty"`
 		}
 
@@ -82,7 +87,14 @@ func ListProjects(c *gin.Context) {
 			ID:          p.ID.Hex(),
 			Name:        p.Name,
 			Description: p.Description,
+			Color:       p.Color,
 			TaskCount:   taskCount,
+			TasksCount:  taskCount,
+		}
+
+		// ใส่ createdAt (string) ถ้ามี
+		if p.CreatedAt != nil {
+			resp.CreatedAt = p.CreatedAt.Format("2006-01-02T15:04:05Z")
 		}
 
 		// ใส่ updatedAt (string) ถ้ามี
@@ -109,17 +121,28 @@ func CreateProject(c *gin.Context) {
 	var input struct {
 		Name        string `json:"name" binding:"required"`
 		Description string `json:"description"`
+		Color       string `json:"color"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// ถ้าไม่ได้ส่ง color มา ให้เลือกสี random จากรายการ
+	if input.Color == "" {
+		colors := []string{"#6366f1", "#ec4899", "#f97316", "#06b6d4", "#10b981", "#f59e0b"}
+		input.Color = colors[len(colors)%len(colors)]
+	}
+
+	now := time.Now()
 	p := models.Project{
 		Name:        input.Name,
 		Description: input.Description,
+		Color:       input.Color,
 		OwnerID:     uid,
 		Members:     []models.ProjectMember{{UserID: uid, Role: models.RoleAdmin}},
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	col := db.Database.Collection("projects")
@@ -132,7 +155,13 @@ func CreateProject(c *gin.Context) {
 		return
 	}
 	oid := res.InsertedID.(primitive.ObjectID)
-	c.JSON(http.StatusCreated, gin.H{"id": oid.Hex(), "name": p.Name, "description": p.Description})
+	c.JSON(http.StatusCreated, gin.H{
+		"id":          oid.Hex(),
+		"name":        p.Name,
+		"description": p.Description,
+		"color":       p.Color,
+		"createdAt":   now.Format(time.RFC3339),
+	})
 }
 
 // UpdateProject อนุญาตให้แก้ไขชื่อ / description
