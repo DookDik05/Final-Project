@@ -484,11 +484,11 @@ export default function ProjectBoardPage() {
 
           <button
             className="
-              inline-flex items-center gap-1
-              text-[11px] px-3 py-1 rounded-lg
-              bg-zinc-800 border border-zinc-700
-              hover:bg-zinc-700 hover:border-zinc-600
-              text-zinc-200
+              inline-flex items-center gap-1.5
+              text-[11px] px-3 py-1.5 rounded-lg
+              bg-zinc-800/60 border border-zinc-700/50
+              hover:bg-zinc-800 hover:border-zinc-600
+              text-zinc-300
               transition
             "
             onClick={() => {
@@ -523,20 +523,20 @@ export default function ProjectBoardPage() {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className="w-64 shrink-0 flex flex-col rounded-xl bg-zinc-800 border border-zinc-700 shadow-xl"
+                        className="w-72 shrink-0 flex flex-col rounded-lg bg-gradient-to-b from-zinc-800 to-zinc-800/50 border border-zinc-700/50 shadow-sm"
                       >
                         {/* column header */}
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700">
-                          <div className="text-zinc-100 font-medium text-sm flex items-center gap-2">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700/30">
+                          <div className="text-zinc-200 font-semibold text-sm flex items-center gap-3">
                             <span>{col.name}</span>
-                            <span className="text-[10px] text-zinc-400 bg-zinc-900 border border-zinc-700 rounded px-2 py-[2px]">
+                            <span className="text-[11px] text-zinc-500 bg-zinc-900/60 border border-zinc-700/40 rounded-full px-2.5 py-1">
                               {colTasks.length}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5">
                             <button
-                              className="text-[11px] font-medium bg-indigo-500 hover:bg-indigo-600 text-white rounded px-2 py-1 shadow-lg shadow-indigo-900/50 inline-flex items-center gap-1"
+                              className="text-[11px] font-medium bg-indigo-600/80 hover:bg-indigo-600 text-white rounded px-2.5 py-1.5 inline-flex items-center gap-1 transition"
                               onClick={() => {
                                 setActiveColumnId(col.id)
                                 setTaskTitle('')
@@ -547,13 +547,13 @@ export default function ProjectBoardPage() {
                               }}
                               title="เพิ่มงานใหม่"
                             >
-                              <Plus size={13} />
+                              <Plus size={12} />
                               Task
                             </button>
 
                             {/* ปุ่มเมนูคอลัมน์ */}
                             <button
-                              className="text-zinc-500 hover:text-zinc-200 text-xs px-2 py-1 rounded hover:bg-zinc-700/50 transition"
+                              className="text-zinc-500 hover:text-zinc-300 p-1 rounded hover:bg-zinc-700/40 transition"
                               onClick={() => {
                                 setColumnForOptions(col)
                                 setShowColumnOptions(true)
@@ -567,9 +567,9 @@ export default function ProjectBoardPage() {
 
 
                         {/* task list (droppable area) */}
-                        <div className="flex flex-col gap-2 p-4 min-h-[40px]">
+                        <div className="flex flex-col gap-2.5 p-3 min-h-[50px]">
                           {colTasks.length === 0 && (
-                            <div className="text-zinc-500 text-xs italic">
+                            <div className="text-zinc-600 text-xs">
                               No tasks
                             </div>
                           )}
@@ -585,20 +585,20 @@ export default function ProjectBoardPage() {
                                   ref={providedDrag.innerRef}
                                   {...providedDrag.draggableProps}
                                   {...providedDrag.dragHandleProps}
-                                  className="rounded-lg bg-zinc-900 border border-zinc-700/80 p-3 shadow-lg shadow-black/40 cursor-pointer hover:border-indigo-500/60 transition"
+                                  className="rounded-lg bg-zinc-900/60 border border-zinc-700/50 p-3 shadow-sm cursor-pointer hover:border-indigo-500/50 hover:bg-zinc-900/80 transition"
                                   onClick={() => {
                                     setSelectedTask(task)
                                     setShowTaskDetail(true)
                                   }}
                                 >
-                                  <div className="flex justify-between items-start">
-                                    <div className="text-zinc-100 text-sm font-medium leading-tight">
+                                  <div className="flex justify-between items-start gap-2">
+                                    <div className="text-zinc-100 text-sm font-medium leading-tight flex-1">
                                       {task.title}
                                     </div>
 
                                     {/* ⭐ NEW: ปุ่มเมนู Options */}
                                     <button
-                                      className="text-zinc-500 hover:text-zinc-300 text-xs px-1 hover:bg-zinc-800 rounded transition"
+                                      className="text-zinc-500 hover:text-zinc-300 p-0.5 hover:bg-zinc-800/50 rounded transition shrink-0"
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         setSelectedTask(task)
@@ -606,12 +606,12 @@ export default function ProjectBoardPage() {
                                       }}
                                       title="ตัวเลือกงาน"
                                     >
-                                      <MoreVertical size={14} />
+                                      <MoreVertical size={13} />
                                     </button>
                                   </div>
 
                                   {task.description ? (
-                                    <div className="text-zinc-400 text-xs mt-1 line-clamp-3">
+                                    <div className="text-zinc-400 text-xs mt-2 line-clamp-2">
                                       {task.description}
                                     </div>
                                   ) : null}
@@ -619,12 +619,12 @@ export default function ProjectBoardPage() {
                                   <div className="flex items-center justify-between mt-3 text-[10px]">
                                     <span
                                       className={
-                                        "rounded px-2 py-[2px] border " +
+                                        "rounded-full px-2.5 py-1 border text-xs font-medium " +
                                         (task.priority === 'HIGH'
-                                          ? "bg-red-500/20 border-red-500/40 text-red-300"
+                                          ? "bg-red-500/15 border-red-500/30 text-red-300"
                                           : task.priority === 'LOW'
-                                          ? "bg-zinc-700/40 border-zinc-600 text-zinc-300"
-                                          : "bg-indigo-500/20 border-indigo-500/40 text-indigo-300")
+                                          ? "bg-zinc-700/20 border-zinc-600/30 text-zinc-400"
+                                          : "bg-indigo-500/15 border-indigo-500/30 text-indigo-300")
                                       }
                                     >
                                       {task.priority || 'MEDIUM'}
