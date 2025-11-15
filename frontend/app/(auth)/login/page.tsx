@@ -45,12 +45,13 @@ export default function LoginPage() {
     try {
       const { data } = await api.post('/auth/login', { email, password })
       localStorage.setItem('accessToken', data.accessToken)
+      // รอให้ refreshUser เสร็จก่อนไปหน้าถัดไป
       await refreshUser()
-      nav.push('/')
+      // ถ้า refreshUser สำเร็จ ก็ navigate ไปหน้า dashboard
+      nav.push('/dashboard')
     } catch (err: any) {
       console.error('LOGIN ERROR:', err?.response || err)
       setError(err?.response?.data?.error || 'ไม่สามารถเข้าสู่ระบบได้ กรุณาตรวจสอบอีเมลและรหัสผ่าน')
-    } finally {
       setLoading(false)
     }
   }
