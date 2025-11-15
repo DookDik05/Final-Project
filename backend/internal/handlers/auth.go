@@ -40,11 +40,11 @@ func Register(c *gin.Context) {
 	// insert to MongoDB
 	coll := db.Client.Database(os.Getenv("MONGODB_DB")).Collection("users")
 	_, err = coll.InsertOne(context.TODO(), bson.M{
-		"name":      body.Name,
-		"email":     body.Email,
-		"password":  string(hash),
-		"role":      "MEMBER",
-		"createdAt": time.Now(),
+		"name":         body.Name,
+		"email":        strings.ToLower(strings.TrimSpace(body.Email)),
+		"passwordHash": string(hash),
+		"role":         "MEMBER",
+		"createdAt":    time.Now(),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "insert error"})
@@ -118,4 +118,132 @@ func Me(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"id": u.ID.Hex(), "name": u.Name, "email": u.Email, "role": u.Role})
+}
+
+// UpdateProfile อัปเดตชื่อผู้ใช้
+func UpdateProfile(c *gin.Context) {
+	userSub := c.MustGet("userSub").(string)
+	currentUserID, _ := primitive.ObjectIDFromHex(userSub)
+
+	userID := c.Param("id")
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	// เช็ค permission: user สามารถแก้ไขเฉพาะข้อมูลของตัวเองเท่านั้น
+	if currentUserID != oid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you can only update your own profile"})
+		return
+	}
+
+	var input struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	col := db.Database.Collection("users")
+	_, err = col.UpdateByID(ctx, oid, bson.M{"$set": bson.M{"name": input.Name}})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "updated"})
+}
+
+// ChangePassword เปลี่ยนรหัสผ่าน
+func ChangePassword(c *gin.Context) {
+	sub := c.MustGet("userSub").(string)
+	oid, _ := primitive.ObjectIDFromHex(sub)
+
+	var input struct {
+		CurrentPassword string `json:"currentPassword" binding:"required"`
+		NewPassword     string `json:"newPassword" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(input.NewPassword) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "password must be at least 6 characters"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	col := db.Database.Collection("users")
+	var u models.User
+	if err := col.FindOne(ctx, bson.M{"_id": oid}).Decode(&u); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	// ตรวจสอบรหัสผ่านเก่า
+	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(input.CurrentPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "current password is incorrect"})
+		return
+	}
+
+	// hash รหัสผ่านใหม่
+	newHash, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), 10)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "hash error"})
+		return
+	}
+
+	// อัปเดตรหัสผ่าน
+	_, err = col.UpdateByID(ctx, oid, bson.M{"$set": bson.M{"passwordHash": string(newHash)}})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "password changed"})
+}
+
+// DeleteAccount ลบบัญชี (ลบ user และ projects/tasks ทั้งหมด)
+func DeleteAccount(c *gin.Context) {
+	userSub := c.MustGet("userSub").(string)
+	currentUserID, _ := primitive.ObjectIDFromHex(userSub)
+
+	userID := c.Param("id")
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	// เช็ค permission: user สามารถลบเฉพาะบัญชีของตัวเองเท่านั้น
+	if currentUserID != oid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you can only delete your own account"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// ลบ projects ที่ user นี้เป็นเจ้าของ
+	projCol := db.Database.Collection("projects")
+	projCol.DeleteMany(ctx, bson.M{"ownerId": oid})
+
+	// ลบ user
+	userCol := db.Database.Collection("users")
+	result, err := userCol.DeleteOne(ctx, bson.M{"_id": oid})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "delete failed"})
+		return
+	}
+	if result.DeletedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "account deleted"})
 }

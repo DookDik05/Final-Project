@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { api } from '@/lib/api'
 import PageHeader from '@/components/PageHeader'
+import { Download } from 'lucide-react'
 
 type Column = { id: string; name: string; position?: number }
 type Task = {
@@ -139,8 +140,11 @@ export default function ProjectReportPage() {
               px-4 py-2 rounded-lg shadow-lg shadow-indigo-900/40
               border border-indigo-400/30
               transition
+              inline-flex items-center gap-2
             "
+            title="ดาวน์โหลด CSV"
           >
+            <Download size={16} />
             Export CSV
           </button>
         }

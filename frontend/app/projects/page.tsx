@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import PageHeader from '@/components/PageHeader'
+import BackLink from '@/components/BackLink'
+import { Plus, FileText, CheckCircle2, MoreVertical, Edit, Trash2 } from 'lucide-react'
 
 type Project = {
   id: string
@@ -193,6 +195,11 @@ export default function ProjectsPage() {
   return (
     <div className="space-y-6">
 
+      {/* Back button */}
+      <div className="flex items-center justify-between mb-4">
+        <BackLink href="/" label="กลับหน้าแรก" />
+      </div>
+
       {/* ส่วนหัวของหน้า */}
       <PageHeader
         title="Your Projects"
@@ -204,11 +211,13 @@ export default function ProjectsPage() {
               bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium
               px-4 py-2 rounded-lg shadow-lg shadow-indigo-900/40
               border border-indigo-400/30
-              transition
+              transition inline-flex items-center gap-2
             "
             onClick={() => setShowCreateModal(true)}
+            title="สร้างโปรเจกต์ใหม่"
           >
-            + New Project
+            <Plus size={16} />
+            New Project
           </button>
         }
       />
@@ -279,7 +288,7 @@ export default function ProjectsPage() {
                 rounded px-2 py-[2px]
                 text-zinc-300
               ">
-                <span className="text-[10px] leading-none">📌</span>
+                <CheckCircle2 size={12} />
                 <span>{p.taskCount ?? 0} tasks</span>
               </span>
 
@@ -496,7 +505,7 @@ function ProjectCardMenu({
         onClick={() => setOpen(o => !o)}
         title="More actions"
       >
-        ⋯
+        <MoreVertical size={14} />
       </button>
 
       {open && (
@@ -512,20 +521,22 @@ function ProjectCardMenu({
           <button
             className="
               w-full text-left px-3 py-2 hover:bg-zinc-700/60
-              hover:text-white rounded-t-lg
+              hover:text-white rounded-t-lg inline-flex items-center gap-2
             "
             onClick={() => { setOpen(false); onEdit() }}
           >
+            <Edit size={14} />
             Edit
           </button>
 
           <button
             className="
               w-full text-left px-3 py-2 text-red-400 hover:bg-red-950/40
-              hover:text-red-300 rounded-b-lg
+              hover:text-red-300 rounded-b-lg inline-flex items-center gap-2
             "
             onClick={() => { setOpen(false); onDelete() }}
           >
+            <Trash2 size={14} />
             Delete
           </button>
         </div>

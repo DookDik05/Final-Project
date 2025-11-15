@@ -137,6 +137,9 @@ func CreateProject(c *gin.Context) {
 
 // UpdateProject อนุญาตให้แก้ไขชื่อ / description
 func UpdateProject(c *gin.Context) {
+	userSub := c.MustGet("userSub").(string)
+	userID, _ := primitive.ObjectIDFromHex(userSub)
+
 	projID := c.Param("id")
 
 	oid, err := primitive.ObjectIDFromHex(projID)
@@ -159,10 +162,20 @@ func UpdateProject(c *gin.Context) {
 		return
 	}
 
-	// TODO: คุณอาจอยากเช็ค owner/permission ด้วย
-	// เช่นเทียบ userId จาก token ว่าเป็นเจ้าของโปรเจกต์นี้มั้ย
-
 	coll := db.Database.Collection("projects")
+
+	// เช็ค permission: ต้องเป็นเจ้าของโปรเจกต์
+	var proj struct {
+		OwnerID primitive.ObjectID `bson:"ownerId"`
+	}
+	if err := coll.FindOne(context.Background(), bson.M{"_id": oid}).Decode(&proj); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
+		return
+	}
+	if proj.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to update this project"})
+		return
+	}
 
 	update := bson.M{
 		"$set": bson.M{
@@ -172,7 +185,7 @@ func UpdateProject(c *gin.Context) {
 		},
 	}
 
-	res, err := coll.UpdateOne(
+	_, err = coll.UpdateOne(
 		context.Background(),
 		bson.M{"_id": oid},
 		update,
@@ -181,25 +194,36 @@ func UpdateProject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
 	}
-	if res.MatchedCount == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
-		return
-	}
 
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
 func DeleteProject(c *gin.Context) {
+	userSub := c.MustGet("userSub").(string)
+	userID, _ := primitive.ObjectIDFromHex(userSub)
+
 	projID := c.Param("id")
 
 	oid, err := primitive.ObjectIDFromHex(projID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project id"})
 		return
-	} // TODO: คุณอาจอยากเช็ค owner/permission ด้วย
-	// เช่นเทียบ userId จาก token ว่าเป็นเจ้าของโปรเจกต์นี้มั้ย
+	}
 
 	coll := db.Database.Collection("projects")
+
+	// เช็ค permission: ต้องเป็นเจ้าของโปรเจกต์
+	var proj struct {
+		OwnerID primitive.ObjectID `bson:"ownerId"`
+	}
+	if err := coll.FindOne(context.Background(), bson.M{"_id": oid}).Decode(&proj); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})
+		return
+	}
+	if proj.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to delete this project"})
+		return
+	}
 
 	res, err := coll.DeleteOne(
 		context.Background(),

@@ -57,13 +57,24 @@ func main() {
 			protected.GET("/projects", handlers.ListProjects)
 			protected.POST("/projects", handlers.CreateProject)
 			protected.GET("/projects/:id", handlers.GetProjectDetail)
-			protected.PATCH("/projects/:id", handlers.UpdateProject)  // <-- ใหม่
-			protected.DELETE("/projects/:id", handlers.DeleteProject) // <-- ใหม่
+			protected.PATCH("/projects/:id", handlers.UpdateProject)
+			protected.DELETE("/projects/:id", handlers.DeleteProject)
 
-			// Board / tasks
+			// Columns
 			protected.POST("/columns", handlers.CreateColumn)
+			protected.PATCH("/columns/:id", handlers.UpdateColumn)
+			protected.DELETE("/columns/:id", handlers.DeleteColumn)
+
+			// Tasks
 			protected.POST("/tasks", handlers.CreateTask)
+			protected.PATCH("/tasks/:id", handlers.UpdateTask)
+			protected.DELETE("/tasks/:id", handlers.DeleteTask)
 			protected.PATCH("/tasks/move", handlers.MoveTask)
+
+			// Users
+			protected.PATCH("/users/:id", handlers.UpdateProfile)
+			protected.DELETE("/users/:id", handlers.DeleteAccount)
+			protected.POST("/auth/change-password", handlers.ChangePassword)
 		}
 
 	}

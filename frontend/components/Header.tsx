@@ -3,11 +3,11 @@
 import React, { ReactNode } from 'react'
 
 export default function SectionHeader({
-  title,
+  title = 'Task Manager',
   subtitle,
   actions,
 }: {
-  title: string
+  title?: string
   subtitle?: string
   actions?: ReactNode
 }) {

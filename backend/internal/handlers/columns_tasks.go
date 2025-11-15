@@ -157,3 +157,296 @@ func MoveTask(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
+
+// UpdateTask แก้ไข task (title, description, priority)
+func UpdateTask(c *gin.Context) {
+	userSub := c.MustGet("userSub").(string)
+	userID, _ := primitive.ObjectIDFromHex(userSub)
+
+	taskID := c.Param("id")
+	taskOID, err := primitive.ObjectIDFromHex(taskID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid task id"})
+		return
+	}
+
+	var input struct {
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		Priority    string `json:"priority"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	taskCol := db.Database.Collection("tasks")
+
+	// หา task และตรวจสอบว่า user เป็นเจ้าของ project นี้
+	var task struct {
+		ColumnID primitive.ObjectID `bson:"columnId"`
+	}
+	if err := taskCol.FindOne(ctx, bson.M{"_id": taskOID}).Decode(&task); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+		return
+	}
+
+	// หา column เพื่อได้ board
+	colCol := db.Database.Collection("columns")
+	var column struct {
+		BoardID primitive.ObjectID `bson:"boardId"`
+	}
+	if err := colCol.FindOne(ctx, bson.M{"_id": task.ColumnID}).Decode(&column); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "column not found"})
+		return
+	}
+
+	// หา project เพื่อตรวจสอบ owner
+	boardCol := db.Database.Collection("boards")
+	var board struct {
+		ProjectID primitive.ObjectID `bson:"projectId"`
+	}
+	if err := boardCol.FindOne(ctx, bson.M{"_id": column.BoardID}).Decode(&board); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "board not found"})
+		return
+	}
+
+	projCol := db.Database.Collection("projects")
+	var proj struct {
+		OwnerID primitive.ObjectID `bson:"ownerId"`
+	}
+	if err := projCol.FindOne(ctx, bson.M{"_id": board.ProjectID}).Decode(&proj); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "project not found"})
+		return
+	}
+
+	if proj.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to update this task"})
+		return
+	}
+
+	updateDoc := bson.M{}
+	if input.Title != "" {
+		updateDoc["title"] = input.Title
+	}
+	if input.Description != "" {
+		updateDoc["description"] = input.Description
+	}
+	if input.Priority != "" {
+		updateDoc["priority"] = input.Priority
+	}
+
+	_, err = taskCol.UpdateByID(ctx, taskOID, bson.M{"$set": updateDoc})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "updated"})
+}
+
+// DeleteTask ลบ task
+func DeleteTask(c *gin.Context) {
+	userSub := c.MustGet("userSub").(string)
+	userID, _ := primitive.ObjectIDFromHex(userSub)
+
+	taskID := c.Param("id")
+	taskOID, err := primitive.ObjectIDFromHex(taskID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid task id"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	taskCol := db.Database.Collection("tasks")
+
+	// หา task และตรวจสอบ permission
+	var task struct {
+		ColumnID primitive.ObjectID `bson:"columnId"`
+	}
+	if err := taskCol.FindOne(ctx, bson.M{"_id": taskOID}).Decode(&task); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+		return
+	}
+
+	// หา column -> board -> project -> ตรวจสอบ owner
+	colCol := db.Database.Collection("columns")
+	var column struct {
+		BoardID primitive.ObjectID `bson:"boardId"`
+	}
+	if err := colCol.FindOne(ctx, bson.M{"_id": task.ColumnID}).Decode(&column); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "column not found"})
+		return
+	}
+
+	boardCol := db.Database.Collection("boards")
+	var board struct {
+		ProjectID primitive.ObjectID `bson:"projectId"`
+	}
+	if err := boardCol.FindOne(ctx, bson.M{"_id": column.BoardID}).Decode(&board); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "board not found"})
+		return
+	}
+
+	projCol := db.Database.Collection("projects")
+	var proj struct {
+		OwnerID primitive.ObjectID `bson:"ownerId"`
+	}
+	if err := projCol.FindOne(ctx, bson.M{"_id": board.ProjectID}).Decode(&proj); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "project not found"})
+		return
+	}
+
+	if proj.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to delete this task"})
+		return
+	}
+
+	result, err := taskCol.DeleteOne(ctx, bson.M{"_id": taskOID})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "delete failed"})
+		return
+	}
+	if result.DeletedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
+}
+
+// UpdateColumn แก้ไข column name
+func UpdateColumn(c *gin.Context) {
+	userSub := c.MustGet("userSub").(string)
+	userID, _ := primitive.ObjectIDFromHex(userSub)
+
+	columnID := c.Param("id")
+	colOID, err := primitive.ObjectIDFromHex(columnID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid column id"})
+		return
+	}
+
+	var input struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	colCol := db.Database.Collection("columns")
+
+	// หา column แล้วตรวจสอบ permission
+	var column struct {
+		BoardID primitive.ObjectID `bson:"boardId"`
+	}
+	if err := colCol.FindOne(ctx, bson.M{"_id": colOID}).Decode(&column); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "column not found"})
+		return
+	}
+
+	// หา board -> project -> ตรวจสอบ owner
+	boardCol := db.Database.Collection("boards")
+	var board struct {
+		ProjectID primitive.ObjectID `bson:"projectId"`
+	}
+	if err := boardCol.FindOne(ctx, bson.M{"_id": column.BoardID}).Decode(&board); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "board not found"})
+		return
+	}
+
+	projCol := db.Database.Collection("projects")
+	var proj struct {
+		OwnerID primitive.ObjectID `bson:"ownerId"`
+	}
+	if err := projCol.FindOne(ctx, bson.M{"_id": board.ProjectID}).Decode(&proj); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "project not found"})
+		return
+	}
+
+	if proj.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to update this column"})
+		return
+	}
+
+	_, err = colCol.UpdateByID(ctx, colOID, bson.M{"$set": bson.M{"name": input.Name}})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "updated"})
+}
+
+// DeleteColumn ลบ column และงานทั้งหมดในนั้น
+func DeleteColumn(c *gin.Context) {
+	userSub := c.MustGet("userSub").(string)
+	userID, _ := primitive.ObjectIDFromHex(userSub)
+
+	columnID := c.Param("id")
+	colOID, err := primitive.ObjectIDFromHex(columnID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid column id"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	colCol := db.Database.Collection("columns")
+
+	// หา column และตรวจสอบ permission
+	var column struct {
+		BoardID primitive.ObjectID `bson:"boardId"`
+	}
+	if err := colCol.FindOne(ctx, bson.M{"_id": colOID}).Decode(&column); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "column not found"})
+		return
+	}
+
+	// หา board -> project -> ตรวจสอบ owner
+	boardCol := db.Database.Collection("boards")
+	var board struct {
+		ProjectID primitive.ObjectID `bson:"projectId"`
+	}
+	if err := boardCol.FindOne(ctx, bson.M{"_id": column.BoardID}).Decode(&board); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "board not found"})
+		return
+	}
+
+	projCol := db.Database.Collection("projects")
+	var proj struct {
+		OwnerID primitive.ObjectID `bson:"ownerId"`
+	}
+	if err := projCol.FindOne(ctx, bson.M{"_id": board.ProjectID}).Decode(&proj); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "project not found"})
+		return
+	}
+
+	if proj.OwnerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to delete this column"})
+		return
+	}
+
+	// ลบ tasks ที่อยู่ใน column นี้
+	taskCol := db.Database.Collection("tasks")
+	taskCol.DeleteMany(ctx, bson.M{"columnId": colOID})
+
+	// ลบ column
+	result, err := colCol.DeleteOne(ctx, bson.M{"_id": colOID})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "delete failed"})
+		return
+	}
+	if result.DeletedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "column not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
+}
