@@ -247,3 +247,134 @@ func DeleteAccount(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "account deleted"})
 }
+
+// ForgotPassword generates a password reset token and returns it
+func ForgotPassword(c *gin.Context) {
+	var input struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	email := strings.ToLower(strings.TrimSpace(input.Email))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Find user by email
+	usersColl := db.Database.Collection("users")
+	var user models.User
+	if err := usersColl.FindOne(ctx, bson.M{"email": email}).Decode(&user); err != nil {
+		// Don't reveal if user exists or not (security best practice)
+		c.JSON(http.StatusOK, gin.H{"message": "if email exists, reset link will be sent"})
+		return
+	}
+
+	// Generate reset token (JWT-based, 24-hour expiry)
+	resetToken, err := utils.SignResetToken(user.ID.Hex())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate reset token"})
+		return
+	}
+
+	// Store reset token in database
+	resetTokensColl := db.Database.Collection("passwordResetTokens")
+	_, err = resetTokensColl.InsertOne(ctx, bson.M{
+		"userId":    user.ID,
+		"email":     email,
+		"token":     resetToken,
+		"expiresAt": time.Now().Add(24 * time.Hour),
+		"createdAt": time.Now(),
+		"used":      false,
+	})
+	if err != nil {
+		log.Println("FORGOT_PASSWORD: insert token error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not save reset token"})
+		return
+	}
+
+	// In production, you would send this via email
+	// For now, return it for testing purposes
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "password reset link sent to your email",
+		"resetToken": resetToken, // Remove in production, send via email instead
+	})
+}
+
+// ResetPassword validates the reset token and updates password
+func ResetPassword(c *gin.Context) {
+	var input struct {
+		Token       string `json:"token" binding:"required"`
+		NewPassword string `json:"newPassword" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(input.NewPassword) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "password must be at least 6 characters"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Verify token
+	claims, err := utils.VerifyResetToken(input.Token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired reset token"})
+		return
+	}
+
+	userID, err := primitive.ObjectIDFromHex(claims.Sub)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid token"})
+		return
+	}
+
+	// Check if token exists and hasn't been used
+	resetTokensColl := db.Database.Collection("passwordResetTokens")
+	var resetToken models.PasswordResetToken
+	if err := resetTokensColl.FindOne(ctx, bson.M{
+		"token": input.Token,
+		"used":  false,
+	}).Decode(&resetToken); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or already used reset token"})
+		return
+	}
+
+	// Check if token has expired
+	if time.Now().After(resetToken.ExpiresAt) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "reset token has expired"})
+		return
+	}
+
+	// Hash new password
+	newHash, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), 10)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "hash error"})
+		return
+	}
+
+	// Update user password
+	usersColl := db.Database.Collection("users")
+	_, err = usersColl.UpdateByID(ctx, userID, bson.M{
+		"$set": bson.M{"passwordHash": string(newHash)},
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update password"})
+		return
+	}
+
+	// Mark token as used
+	_, err = resetTokensColl.UpdateOne(ctx, bson.M{"token": input.Token}, bson.M{
+		"$set": bson.M{"used": true},
+	})
+	if err != nil {
+		log.Println("RESET_PASSWORD: mark token used error:", err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password reset successfully"})
+}

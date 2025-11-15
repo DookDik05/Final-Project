@@ -32,8 +32,6 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError('')
     try {
-      // TODO: จะเพิ่ม endpoint /auth/forgot-password ใน backend
-      // ตอนนี้เป็น placeholder สำหรับส่ง email reset password
       await api.post('/auth/forgot-password', { email })
       setSuccess(true)
       setTimeout(() => router.push('/login'), 3000)

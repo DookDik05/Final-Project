@@ -1,8 +1,13 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Role string
+
 const (
 	RoleAdmin  Role = "ADMIN"
 	RoleMember Role = "MEMBER"
@@ -18,11 +23,11 @@ type User struct {
 }
 
 type Project struct {
-	ID          primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
-	Name        string               `bson:"name" json:"name"`
-	Description string               `bson:"description,omitempty" json:"description,omitempty"`
-	OwnerID     primitive.ObjectID   `bson:"ownerId" json:"ownerId"`
-	Members     []ProjectMember      `bson:"members" json:"members"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name        string             `bson:"name" json:"name"`
+	Description string             `bson:"description,omitempty" json:"description,omitempty"`
+	OwnerID     primitive.ObjectID `bson:"ownerId" json:"ownerId"`
+	Members     []ProjectMember    `bson:"members" json:"members"`
 }
 
 type ProjectMember struct {
@@ -57,4 +62,15 @@ type Task struct {
 	CreatedByID primitive.ObjectID   `bson:"createdById" json:"createdById"`
 	Assignees   []primitive.ObjectID `bson:"assignees" json:"assignees"`
 	Labels      []primitive.ObjectID `bson:"labels" json:"labels"`
+}
+
+// PasswordResetToken stores reset tokens for password recovery
+type PasswordResetToken struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserID    primitive.ObjectID `bson:"userId" json:"userId"`
+	Email     string             `bson:"email" json:"email"`
+	Token     string             `bson:"token" json:"token"`
+	ExpiresAt time.Time          `bson:"expiresAt" json:"expiresAt"`
+	CreatedAt time.Time          `bson:"createdAt" json:"createdAt"`
+	Used      bool               `bson:"used" json:"used"`
 }
