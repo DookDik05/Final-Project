@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
 
 type AddProjectModalProps = {
@@ -14,6 +14,20 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }: AddProje
   const [description, setDescription] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !saving) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, saving, onClose])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,16 +51,21 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }: AddProje
     }
   }
 
+  const handleClose = () => {
+    if (!saving) onClose()
+  }
+
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={() => { if (!saving) onClose() }}
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        onClick={handleClose}
+        role="presentation"
       />
 
-      <div className="relative z-10 w-full max-w-sm card p-5 bg-zinc-800/90 backdrop-blur-xl border border-zinc-700 shadow-2xl shadow-black/60">
+      <div className="relative z-10 w-full max-w-sm card p-5 bg-zinc-800/90 backdrop-blur-xl border border-zinc-700 shadow-2xl shadow-black/60 rounded-xl">
         <form onSubmit={handleCreate} className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
@@ -57,8 +76,9 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }: AddProje
             </div>
             <button
               type="button"
-              className="text-zinc-500 hover:text-zinc-300 text-xs"
-              onClick={() => { if (!saving) onClose() }}
+              className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors"
+              onClick={handleClose}
+              title="Close (Esc)"
             >
               ✕
             </button>
@@ -95,7 +115,7 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }: AddProje
               type="button"
               disabled={saving}
               className="btn text-zinc-300"
-              onClick={() => { if (!saving) onClose() }}
+              onClick={handleClose}
             >
               Cancel
             </button>

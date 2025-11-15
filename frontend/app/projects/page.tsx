@@ -315,7 +315,14 @@ export default function ProjectsPage() {
 
       {/* ========== MODAL: CREATE PROJECT ========== */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <ModalOverlay
+          onClose={() => {
+            setShowCreateModal(false)
+            setNewName('')
+            setNewDesc('')
+            setCreateErr('')
+          }}
+        >
           <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4">
               Create new project
@@ -367,12 +374,20 @@ export default function ProjectsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* ========== MODAL: EDIT PROJECT ========== */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <ModalOverlay
+          onClose={() => {
+            setShowEditModal(false)
+            setEditId(null)
+            setEditName('')
+            setEditDesc('')
+            setEditErr('')
+          }}
+        >
           <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4">
               Edit project
@@ -423,12 +438,19 @@ export default function ProjectsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* ========== MODAL: DELETE CONFIRM ========== */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <ModalOverlay
+          onClose={() => {
+            setShowDeleteModal(false)
+            setDeleteId(null)
+            setDeleteName('')
+            setDeleteErr('')
+          }}
+        >
           <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4">
               Delete project
@@ -472,9 +494,44 @@ export default function ProjectsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
+    </div>
+  )
+}
+
+/**
+ * Reusable Modal Overlay with click-outside and Escape key support
+ */
+function ModalOverlay({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+        role="presentation"
+      />
+      <div className="relative z-10">
+        {children}
+      </div>
     </div>
   )
 }
