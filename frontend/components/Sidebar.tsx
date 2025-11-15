@@ -101,19 +101,19 @@ export default function Sidebar() {
           <>
             <NavItem
               href="/dashboard"
-              label="Dashboard"
+              label="แดชบอร์ด"
               active={pathname.startsWith('/dashboard')}
               icon={<LayoutDashboard size={16} />}
             />
             <NavItem
               href="/projects"
-              label="Projects"
+              label="โปรเจค"
               active={pathname.startsWith('/projects')}
               icon={<Folder size={16} />}
             />
             <NavItem
               href="/profile"
-              label="Profile"
+              label="โปรไฟล์"
               active={pathname === '/profile'}
               icon={<User size={16} />}
             />
@@ -181,7 +181,7 @@ export default function Sidebar() {
               title="เข้าสู่ระบบ"
             >
               <LogIn size={14} />
-              Login
+              เข้าสู่ระบบ
             </Link>
             <Link
               href="/register"
@@ -197,7 +197,7 @@ export default function Sidebar() {
               title="สมัครสมาชิก"
             >
               <UserPlus size={14} />
-              Register
+              สมัครสมาชิก
             </Link>
           </div>
         )}

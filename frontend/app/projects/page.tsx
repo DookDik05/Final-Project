@@ -202,8 +202,8 @@ export default function ProjectsPage() {
 
       {/* ส่วนหัวของหน้า */}
       <PageHeader
-        title="Your Projects"
-        subtitle="All projects in your workspace."
+        title="โปรเจคของคุณ"
+        subtitle="โปรเจคทั้งหมดในพื้นที่ทำงานของคุณ"
         showBack={false}
         actions={
           <button
@@ -214,10 +214,10 @@ export default function ProjectsPage() {
               transition inline-flex items-center gap-2
             "
             onClick={() => setShowCreateModal(true)}
-            title="สร้างโปรเจกต์ใหม่"
+            title="สร้างโปรเจคใหม่"
           >
             <Plus size={16} />
-            New Project
+            โปรเจคใหม่
           </button>
         }
       />

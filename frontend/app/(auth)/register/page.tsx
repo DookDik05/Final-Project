@@ -105,7 +105,7 @@ export default function RegisterPage() {
           {/* Name Field */}
           <div>
             <label className="block text-sm font-medium text-zinc-100 mb-2">
-              ชื่อเต็ม
+              ชื่อผู้ใช้งาน
             </label>
             <div className="relative">
               <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
