@@ -11,7 +11,8 @@ import {
   DropResult,
 } from '@hello-pangea/dnd'
 import BackLink from '@/components/BackLink'
-import { Plus, Trash2, Edit3, MoreVertical, X } from 'lucide-react'
+import { Plus, Trash2, Edit3, MoreVertical, X, Settings } from 'lucide-react'
+import Link from 'next/link'
 
 type Column = {
   id: string
@@ -443,11 +444,11 @@ export default function ProjectBoardPage() {
       <div className="space-y-6">
         {/* Header with back button + project title + description + board name */}
         <div className="space-y-4">
-          {/* แถวบน: back + title */}
+          {/* แถวบน: back + title + settings */}
           <div className="flex items-center justify-between gap-4">
             <BackLink href="/projects" label="ย้อนกลับไปหน้ารายการโปรเจค" />
 
-            <div className="text-right">
+            <div className="text-center flex-1">
               <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                 Project board
               </div>
@@ -455,6 +456,15 @@ export default function ProjectBoardPage() {
                 {data.project?.name || 'Project'}
               </div>
             </div>
+
+            <Link
+              href={`/projects/${projectId}/settings`}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-200 transition"
+              title="ตั้งค่าโปรเจค"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="text-xs hidden sm:inline">ตั้งค่า</span>
+            </Link>
           </div>
 
           {/* description + board name */}
@@ -672,6 +682,7 @@ export default function ProjectBoardPage() {
                 value={taskTitle}
                 onChange={e => setTaskTitle(e.target.value)}
                 placeholder="เช่น ออกแบบ UI หน้า Login"
+                title="ชื่อ Task"
               />
             </div>
 
@@ -684,6 +695,7 @@ export default function ProjectBoardPage() {
                 value={taskDesc}
                 onChange={e => setTaskDesc(e.target.value)}
                 placeholder="รายละเอียดงาน เช่น deadline, note ต่าง ๆ"
+                title="รายละเอียด Task"
               />
             </div>
 
@@ -884,6 +896,8 @@ export default function ProjectBoardPage() {
               className="input mb-3"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="ชื่อ Task"
+              title="ชื่อ Task"
             />
 
             <label className="block text-sm text-zinc-300 mb-1">รายละเอียด</label>
@@ -891,6 +905,8 @@ export default function ProjectBoardPage() {
               className="input h-24 mb-3"
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
+              placeholder="รายละเอียด Task"
+              title="รายละเอียด Task"
             />
 
             <label className="block text-sm text-zinc-300 mb-2">Priority</label>

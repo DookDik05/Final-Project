@@ -78,7 +78,7 @@ export default function Sidebar() {
           <div className="text-zinc-100 text-sm font-semibold leading-none">
             Mini Task Manager
           </div>
-          <div className="text-[11px] text-zinc-500 leading-none">
+          <div className="text-[11px] text-zinc-500 leading-none pt-1">
             จัดการงาน &amp; โปรเจค
           </div>
         </div>
