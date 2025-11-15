@@ -1,4 +1,4 @@
-// File: E:\Final-Project\mini-taskmgr-next-go-full\mini-taskmgr-next-go\frontend\app\page.tsx
+// File: E:\Final-Project\mini-taskmgr-next-go\frontend\app\page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

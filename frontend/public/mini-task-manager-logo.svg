@@ -1,0 +1,66 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Definitions -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#18181b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#27272a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="primary-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="200" height="200" rx="40" fill="url(#bg-gradient)"/>
+  
+  <!-- Main Container - Rounded Square -->
+  <rect x="40" y="40" width="120" height="120" rx="20" fill="#1f1f23" stroke="#3f3f46" stroke-width="2"/>
+  
+  <!-- Clipboard Top Clip -->
+  <rect x="85" y="35" width="30" height="12" rx="3" fill="#3f3f46"/>
+  <rect x="90" y="38" width="20" height="8" rx="2" fill="#27272a"/>
+  
+  <!-- Task Items -->
+  <!-- Task 1 - Completed -->
+  <g opacity="0.9">
+    <rect x="55" y="65" width="90" height="18" rx="4" fill="#27272a"/>
+    <rect x="60" y="69" width="10" height="10" rx="2" fill="url(#primary-gradient)"/>
+    <polyline points="62,74 64,76 68,71" fill="none" stroke="#fafafa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="75" y1="74" x2="130" y2="74" stroke="#52525b" stroke-width="2" stroke-linecap="round" stroke-dasharray="2,2"/>
+  </g>
+  
+  <!-- Task 2 - Completed -->
+  <g opacity="0.9">
+    <rect x="55" y="93" width="90" height="18" rx="4" fill="#27272a"/>
+    <rect x="60" y="97" width="10" height="10" rx="2" fill="url(#primary-gradient)"/>
+    <polyline points="62,102 64,104 68,99" fill="none" stroke="#fafafa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="75" y1="102" x2="120" y2="102" stroke="#52525b" stroke-width="2" stroke-linecap="round" stroke-dasharray="2,2"/>
+  </g>
+  
+  <!-- Task 3 - Active with Glow -->
+  <g filter="url(#glow)">
+    <rect x="55" y="121" width="90" height="18" rx="4" fill="#27272a" stroke="#6366f1" stroke-width="2"/>
+    <rect x="60" y="125" width="10" height="10" rx="2" fill="none" stroke="#6366f1" stroke-width="2"/>
+    <circle cx="65" cy="130" r="2" fill="#6366f1"/>
+    <line x1="75" y1="130" x2="135" y2="130" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Decorative Dots -->
+  <circle cx="50" cy="50" r="2" fill="#6366f1" opacity="0.5"/>
+  <circle cx="150" cy="55" r="2" fill="#818cf8" opacity="0.4"/>
+  <circle cx="145" cy="145" r="2" fill="#6366f1" opacity="0.3"/>
+  
+  <!-- "MINI" Badge -->
+  <g transform="translate(130, 145)">
+    <rect x="0" y="0" width="25" height="10" rx="5" fill="url(#primary-gradient)" opacity="0.9"/>
+    <text x="12.5" y="7.5" font-family="Arial, sans-serif" font-size="6" font-weight="bold" fill="#fafafa" text-anchor="middle">MINI</text>
+  </g>
+</svg>

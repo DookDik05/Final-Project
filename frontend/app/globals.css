@@ -2,9 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light; }
-body { @apply bg-slate-50 text-slate-900; }
-.container { @apply max-w-6xl mx-auto px-4; }
-.card { @apply bg-white border border-slate-200 rounded-2xl shadow-sm; }
-.btn { @apply inline-flex items-center justify-center px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-100; }
-.input { @apply w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-200; }
+/* Global dark surface */
+:root {
+  color-scheme: dark;
+}
+
+/* Background ทั้งหน้า */
+body {
+  @apply bg-zinc-900 text-zinc-100;
+  @apply min-h-screen;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Segoe UI", sans-serif;
+}
+
+/* ความกว้างคอนเทนต์หลัก */
+.container {
+  @apply max-w-6xl mx-auto px-4;
+}
+
+/* Card / Surface ยกขึ้นจากพื้นหลัง */
+.card {
+  @apply bg-zinc-800 border border-zinc-700 rounded-2xl shadow-xl;
+  /* shadow แบบ soft บนพื้นมืด */
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+/* ปุ่มหลัก / ปุ่มรอง */
+.btn {
+  @apply inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium;
+  @apply border border-zinc-700 bg-zinc-800 text-zinc-100;
+  @apply hover:bg-zinc-700 hover:border-zinc-600;
+  transition: all .15s;
+}
+
+/* ปุ่ม primary (เช่น Add Task / New Project) */
+.btn-primary {
+  @apply inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium;
+  @apply bg-indigo-500 hover:bg-indigo-600 text-white;
+  @apply shadow-lg shadow-indigo-900/50;
+  transition: all .15s;
+}
+
+/* อินพุต / ฟอร์ม */
+.input {
+  @apply w-full px-3 py-2 rounded-lg text-sm;
+  @apply bg-zinc-900 text-zinc-100;
+  @apply border border-zinc-700;
+  @apply placeholder-zinc-500;
+  @apply focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500;
+}
+
+/* ข้อความจาง/secondary */
+.text-muted {
+  @apply text-zinc-400 text-sm;
+}
+
+/* ลิงก์ / action text */
+.link {
+  @apply text-indigo-400 hover:text-indigo-300 cursor-pointer;
+  transition: color .15s;
+}
+
+/* เส้นแบ่ง */
+.divider {
+  @apply border-t border-zinc-700;
+}
