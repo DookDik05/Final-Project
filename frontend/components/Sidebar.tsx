@@ -89,12 +89,12 @@ export default function Sidebar() {
       {/* Nav Section */}
       <nav className="flex flex-col gap-1 text-[13px]">
         {/* หน้าหลัก ทุกคนมองเห็นได้ */}
-        <NavItem
+        {/* <NavItem
           href="/"
           label="หน้าหลัก"
           active={pathname === '/'}
           icon={<Home size={16} />}
-        />
+        /> */}
 
         {/* เมนูที่ต้อง Login ก่อนถึงจะมี */}
         {user && (
