@@ -73,7 +73,9 @@ export default function Sidebar() {
     >
       {/* Top Brand */}
       <div className="flex items-center gap-2 mb-6">
-        <Logo />
+        <div className="flex-shrink-0">
+          <Logo size={32} />
+        </div>
         <div className="flex flex-col">
           <div className="text-zinc-100 text-sm font-semibold leading-none">
             Mini Task Manager

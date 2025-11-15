@@ -2,19 +2,31 @@
 
 import React from 'react'
 
-export default function Logo() {
+interface LogoProps {
+  className?: string
+  size?: number
+}
+
+export default function Logo({ className = '', size = 48 }: LogoProps) {
   return (
-    <div
-      className="
-        h-7 w-7 rounded-xl
-        bg-gradient-to-br from-indigo-500/30 to-indigo-700/10
-        border border-indigo-400/40
-        shadow-[0_12px_40px_rgba(99,102,241,0.6)]
-        flex items-center justify-center
-        text-[10px] font-semibold text-indigo-200 tracking-tight
-      "
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 320 320"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
     >
-      TM
-    </div>
+      <rect width="320" height="320" rx="32" fill="#111218" />
+      <rect x="40" y="40" width="240" height="240" rx="24" fill="#181a20" stroke="#3b82f6" strokeWidth="4" />
+      <path
+        d="M96 120h128M96 160h128M96 200h128"
+        stroke="#8b5cf6"
+        strokeWidth="10"
+        strokeLinecap="round"
+      />
+      <circle cx="96" cy="120" r="8" fill="#3b82f6" />
+      <circle cx="96" cy="160" r="8" fill="#3b82f6" />
+      <circle cx="96" cy="200" r="8" fill="#3b82f6" />
+    </svg>
   )
 }
