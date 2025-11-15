@@ -2,10 +2,21 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
 import { CheckCircle2, Zap, BarChart3, Users, ArrowRight, Star } from 'lucide-react'
 import Logo from '@/components/Logo'
 
 export default function LandingPage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  // ถ้า user login แล้ว ให้ไปหน้า dashboard เลย
+  React.useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard')
+    }
+  }, [user, loading, router])
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-zinc-800 to-zinc-900">
       {/* Navigation */}
